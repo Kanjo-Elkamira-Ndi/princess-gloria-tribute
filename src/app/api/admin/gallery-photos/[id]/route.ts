@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/admin-tributes";
 import {
-  getAdminSession,
   approveGalleryPhoto,
   rejectGalleryPhoto,
 } from "@/lib/admin-gallery-photos";
