@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageShell, EternalLightDivider } from "@/components/site-shell";
 import { HeroCarousel } from "@/components/hero-carousel";
 import { ImageGallery } from "@/components/image-gallery";
+import { LeaveTributeForm } from "@/components/leave-tribute-form";
 import { getApprovedTributeCount } from "@/lib/tributes";
 import { getApprovedGalleryPhotos } from "@/lib/gallery-photos";
 
@@ -62,6 +63,24 @@ export default async function LandingPage() {
 
       {/* Image gallery — cherished memories */}
       <ImageGallery additionalPhotos={additionalPhotos} />
+
+      {/* Leave a tribute */}
+      <section className="px-5 sm:px-8 py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <EternalLightDivider />
+          <h2 className="font-serif text-2xl sm:text-3xl text-plum">
+            Leave a tribute
+          </h2>
+          <p className="mt-4 text-foreground/75 leading-relaxed">
+            If you knew Princess Gloria — as family, friend, colleague, or
+            neighbour — we would be honoured to receive your words. A family
+            moderator will review each tribute before it appears on the wall.
+          </p>
+        </div>
+        <div className="mx-auto max-w-2xl mt-8">
+          <LeaveTributeForm />
+        </div>
+      </section>
     </PageShell>
   );
 }
