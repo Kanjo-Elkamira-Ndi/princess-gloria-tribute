@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 
 type GalleryImage = {
@@ -57,6 +58,46 @@ const GALLERY_IMAGES: GalleryImage[] = [
 ];
 
 export function ImageGallery() {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const openLightbox = useCallback((index: number) => {
+    setSelectedIndex(index);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setSelectedIndex(null);
+  }, []);
+
+  const goToPrevious = useCallback(() => {
+    setSelectedIndex((prev) =>
+      prev === null ? null : (prev - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length
+    );
+  }, []);
+
+  const goToNext = useCallback(() => {
+    setSelectedIndex((prev) =>
+      prev === null ? null : (prev + 1) % GALLERY_IMAGES.length
+    );
+  }, []);
+
+  useEffect(() => {
+    if (selectedIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") goToPrevious();
+      if (e.key === "ArrowRight") goToNext();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedIndex, closeLightbox, goToPrevious, goToNext]);
+
   return (
     <section className="px-5 sm:px-8 py-16 bg-lavender/30">
       <div className="mx-auto max-w-7xl">
@@ -75,9 +116,12 @@ export function ImageGallery() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {GALLERY_IMAGES.map((image, index) => (
-            <article
+            <button
               key={index}
-              className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-lavender/50"
+              type="button"
+              onClick={() => openLightbox(index)}
+              className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-lavender/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plum"
+              aria-label={`View ${image.alt}`}
             >
               <Image
                 src={image.src}
@@ -87,19 +131,15 @@ export function ImageGallery() {
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 loading={index < 3 ? "eager" : "lazy"}
               />
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-plum/90 via-plum/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              />
+              <div className="absolute inset-0 bg-gradient-to-t from-plum/90 via-plum/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               {image.caption && (
-                <div
-                  className="absolute bottom-0 left-0 right-0 p-4 text-center transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"
-                >
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-center transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                   <p className="font-serif italic text-sm sm:text-base text-warm-white drop-shadow-lg">
                     {image.caption}
                   </p>
                 </div>
               )}
-            </article>
+            </button>
           ))}
         </div>
 
@@ -125,6 +165,78 @@ export function ImageGallery() {
           </a>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {selectedIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-plum/90 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image lightbox"
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 p-2 rounded-full bg-warm-white/10 text-warm-white hover:bg-warm-white/20 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-white"
+            aria-label="Close lightbox"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Previous button */}
+          <button
+            type="button"
+            onClick={goToPrevious}
+            className="absolute left-2 sm:left-6 z-50 p-3 rounded-full bg-warm-white/10 text-warm-white hover:bg-warm-white/20 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-white"
+            aria-label="Previous image"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Next button */}
+          <button
+            type="button"
+            onClick={goToNext}
+            className="absolute right-2 sm:right-6 z-50 p-3 rounded-full bg-warm-white/10 text-warm-white hover:bg-warm-white/20 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warm-white"
+            aria-label="Next image"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Image container */}
+          <div className="relative w-full max-w-4xl max-h-[85vh] mx-12 sm:mx-20">
+            <Image
+              src={GALLERY_IMAGES[selectedIndex].src}
+              alt={GALLERY_IMAGES[selectedIndex].alt}
+              width={1200}
+              height={1500}
+              className="object-contain w-full h-full max-h-[85vh]"
+              priority
+            />
+          </div>
+
+          {/* Caption */}
+          {GALLERY_IMAGES[selectedIndex].caption && (
+            <div className="absolute bottom-6 left-0 right-0 text-center px-4">
+              <p className="font-serif italic text-sm sm:text-base text-warm-white/90 drop-shadow-lg">
+                {GALLERY_IMAGES[selectedIndex].caption}
+              </p>
+            </div>
+          )}
+
+          {/* Counter */}
+          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 text-warm-white/70 text-sm font-sans">
+            {selectedIndex + 1} / {GALLERY_IMAGES.length}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
