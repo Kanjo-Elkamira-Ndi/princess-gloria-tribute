@@ -16,12 +16,12 @@ export function LeaveTributeForm() {
   const [relationship, setRelationship] = useState("");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
 
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const companyRef = useRef<HTMLInputElement>(null);
 
   function onPickPhotos(files: FileList | null) {
     if (!files) return;
@@ -85,7 +85,8 @@ export function LeaveTributeForm() {
     fd.set("relationship", relationship.trim());
     fd.set("message", message.trim());
     if (email.trim()) fd.set("email", email.trim());
-    if (company) fd.set("company", company);
+    const companyVal = companyRef.current?.value?.trim() ?? "";
+    if (companyVal) fd.set("company", companyVal);
     for (const p of previews) fd.append("photos", p.file);
 
     startTransition(async () => {
@@ -148,8 +149,8 @@ export function LeaveTributeForm() {
           name="company"
           tabIndex={-1}
           autoComplete="off"
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
+          ref={companyRef}
+          defaultValue=""
         />
       </div>
 

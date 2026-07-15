@@ -16,12 +16,12 @@ export default function SubmitGalleryPhotoPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [caption, setCaption] = useState("");
-  const [company, setCompany] = useState("");
 
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const companyRef = useRef<HTMLInputElement>(null);
 
   function onPickPhoto(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -70,7 +70,8 @@ export default function SubmitGalleryPhotoPage() {
     fd.set("name", name.trim());
     if (email.trim()) fd.set("email", email.trim());
     if (caption.trim()) fd.set("caption", caption.trim());
-    if (company) fd.set("company", company);
+    const companyVal = companyRef.current?.value?.trim() ?? "";
+    if (companyVal) fd.set("company", companyVal);
     fd.append("photo", preview.file);
 
     startTransition(async () => {
@@ -162,8 +163,8 @@ export default function SubmitGalleryPhotoPage() {
                   name="company"
                   tabIndex={-1}
                   autoComplete="off"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
+                  ref={companyRef}
+                  defaultValue=""
                 />
               </div>
 
