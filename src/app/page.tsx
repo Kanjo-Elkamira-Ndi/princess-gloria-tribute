@@ -3,9 +3,19 @@ import { PageShell, EternalLightDivider } from "@/components/site-shell";
 import { HeroCarousel } from "@/components/hero-carousel";
 import { ImageGallery } from "@/components/image-gallery";
 import { getApprovedTributeCount } from "@/lib/tributes";
+import { getApprovedGalleryPhotos } from "@/lib/gallery-photos";
 
 export default async function LandingPage() {
-  const tributeCount = await getApprovedTributeCount();
+  const [tributeCount, galleryPhotos] = await Promise.all([
+    getApprovedTributeCount(),
+    getApprovedGalleryPhotos(),
+  ]);
+
+  const additionalPhotos = galleryPhotos.map((p) => ({
+    src: p.src,
+    alt: p.alt,
+    caption: p.caption || undefined,
+  }));
 
   return (
     <PageShell>
@@ -51,7 +61,7 @@ export default async function LandingPage() {
       </section>
 
       {/* Image gallery — cherished memories */}
-      <ImageGallery />
+      <ImageGallery additionalPhotos={additionalPhotos} />
     </PageShell>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 type GalleryImage = {
   src: string;
@@ -41,7 +42,7 @@ const GALLERY_IMAGES: GalleryImage[] = [
     caption: "Together in love, forever in our hearts",
   },
   {
-    src: "/img_card_7.png",
+    src: "/img_card_7.jpg",
     alt: "A peaceful moment from Princess Gloria's life",
     caption: "Grace in every step she took",
   },
@@ -52,7 +53,15 @@ const GALLERY_IMAGES: GalleryImage[] = [
   },
 ];
 
-export function ImageGallery() {
+export function ImageGallery({
+  additionalPhotos = [],
+}: {
+  additionalPhotos?: GalleryImage[];
+}) {
+  const allImages = useMemo(
+    () => [...GALLERY_IMAGES, ...additionalPhotos],
+    [additionalPhotos]
+  );
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const openLightbox = useCallback((index: number) => {
@@ -65,15 +74,15 @@ export function ImageGallery() {
 
   const goToPrevious = useCallback(() => {
     setSelectedIndex((prev) =>
-      prev === null ? null : (prev - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length
+      prev === null ? null : (prev - 1 + allImages.length) % allImages.length
     );
-  }, []);
+  }, [allImages.length]);
 
   const goToNext = useCallback(() => {
     setSelectedIndex((prev) =>
-      prev === null ? null : (prev + 1) % GALLERY_IMAGES.length
+      prev === null ? null : (prev + 1) % allImages.length
     );
-  }, []);
+  }, [allImages.length]);
 
   useEffect(() => {
     if (selectedIndex === null) return;
@@ -110,7 +119,7 @@ export function ImageGallery() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {GALLERY_IMAGES.map((image, index) => (
+          {allImages.map((image, index) => (
             <button
               key={index}
               type="button"
@@ -139,25 +148,12 @@ export function ImageGallery() {
         </div>
 
         <div className="text-center mt-10">
-          <a
-            href="/gallery"
-            className="inline-flex items-center gap-2 font-sans text-sm text-plum hover:text-plum/70 transition-colors"
+          <Link
+            href="/gallery-photos/new"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-plum text-plum font-sans text-sm sm:text-base hover:bg-lavender/60 transition-colors min-h-[44px]"
           >
-            <span className="underline hover:no-underline">View all memories</span>
-            <svg
-              className="w-4 h-4 transition-transform group-hover:translate-x-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
-          </a>
+            Submit a photo
+          </Link>
         </div>
       </div>
 
@@ -208,8 +204,8 @@ export function ImageGallery() {
           {/* Image container */}
           <div className="relative w-full max-w-4xl max-h-[85vh] mx-12 sm:mx-20">
             <Image
-              src={GALLERY_IMAGES[selectedIndex].src}
-              alt={GALLERY_IMAGES[selectedIndex].alt}
+              src={allImages[selectedIndex].src}
+              alt={allImages[selectedIndex].alt}
               width={1200}
               height={1500}
               className="object-contain w-full h-full max-h-[85vh]"
@@ -218,17 +214,17 @@ export function ImageGallery() {
           </div>
 
           {/* Caption */}
-          {GALLERY_IMAGES[selectedIndex].caption && (
+          {allImages[selectedIndex].caption && (
             <div className="absolute bottom-6 left-0 right-0 text-center px-4">
               <p className="font-serif italic text-sm sm:text-base text-warm-white/90 drop-shadow-lg">
-                {GALLERY_IMAGES[selectedIndex].caption}
+                {allImages[selectedIndex].caption}
               </p>
             </div>
           )}
 
           {/* Counter */}
           <div className="absolute top-4 left-4 sm:top-6 sm:left-6 text-warm-white/70 text-sm font-sans">
-            {selectedIndex + 1} / {GALLERY_IMAGES.length}
+            {selectedIndex + 1} / {allImages.length}
           </div>
         </div>
       )}
