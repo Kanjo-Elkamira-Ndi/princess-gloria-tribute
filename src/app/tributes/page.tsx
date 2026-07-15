@@ -8,7 +8,7 @@ export const metadata = {
   title: "Tributes — Princess Gloria Mala Galabe",
 };
 
-export const revalidate = 60; // refresh approved list every minute at most
+export const dynamic = "force-dynamic";
 
 export default async function TributesWallPage() {
   const tributes = await getApprovedTributes();

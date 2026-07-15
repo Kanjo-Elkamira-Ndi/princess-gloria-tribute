@@ -6,6 +6,8 @@ import { LeaveTributeForm } from "@/components/leave-tribute-form";
 import { getApprovedTributeCount } from "@/lib/tributes";
 import { getApprovedGalleryPhotos } from "@/lib/gallery-photos";
 
+export const dynamic = "force-dynamic";
+
 export default async function LandingPage() {
   const [tributeCount, galleryPhotos] = await Promise.all([
     getApprovedTributeCount(),
