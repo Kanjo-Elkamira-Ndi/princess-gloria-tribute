@@ -11,26 +11,6 @@ type GalleryImage = {
 
 const GALLERY_IMAGES: GalleryImage[] = [
   {
-    src: "/carousel_1.png",
-    alt: "Princess Gloria Mala Galabe in a tender moment",
-    caption: "A heart that loved without measure",
-  },
-  {
-    src: "/carousel_2.png",
-    alt: "Princess Gloria surrounded by family and those she cherished",
-    caption: "A life woven with grace and compassion",
-  },
-  {
-    src: "/carousel_3.png",
-    alt: "A serene moment capturing the enduring legacy of Princess Gloria",
-    caption: "Her memory is an eternal blessing",
-  },
-  {
-    src: "/uploads/2939d30c7042fb1662702f84ffb6f8bc.webp",
-    alt: "A cherished memory shared in tribute to Princess Gloria",
-    caption: "Shared with love by a family friend",
-  },
-  {
     src: "/img_card_1.jpg",
     alt: "Princess Gloria Mala Galabe in a tender moment",
     caption: "A heart that loved without measure",
@@ -54,6 +34,21 @@ const GALLERY_IMAGES: GalleryImage[] = [
     src: "/img_card_5.jpg",
     alt: "Princess Gloria in quiet reflection",
     caption: "In every kindness, her spirit lives on",
+  },
+  {
+    src: "/img_card_6.jpg",
+    alt: "A joyful gathering in honour of Princess Gloria",
+    caption: "Together in love, forever in our hearts",
+  },
+  {
+    src: "/img_card_7.png",
+    alt: "A peaceful moment from Princess Gloria's life",
+    caption: "Grace in every step she took",
+  },
+  {
+    src: "/img_card_8.jpg",
+    alt: "Princess Gloria's radiant smile",
+    caption: "Her light continues to shine through us",
   },
 ];
 
