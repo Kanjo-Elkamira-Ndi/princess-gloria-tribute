@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageShell, EternalLightDivider } from "@/components/site-shell";
 import { HeroCarousel } from "@/components/hero-carousel";
+import { ImageGallery } from "@/components/image-gallery";
 import { getApprovedTributeCount } from "@/lib/tributes";
 
 export default async function LandingPage() {
@@ -48,6 +49,9 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Image gallery — cherished memories */}
+      <ImageGallery />
     </PageShell>
   );
 }
