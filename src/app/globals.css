@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   Princess Gloria Mala Galabe — Memorial Tribute
+   Design tokens
+   ============================================================ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-karla);
+  --font-serif: var(--font-fraunces);
+  --font-mono: var(--font-geist-mono);
+
+  /* Surfaces */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* Brand */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* Memorial-specific tokens */
+  --color-plum: var(--plum);          /* deep plum-purple for headings */
+  --color-lavender: var(--lavender);  /* pale lavender surface */
+  --color-cream: var(--cream);        /* creamy muted purple */
+  --color-warm-white: var(--warm-white);
+  --color-gold: var(--gold);          /* muted gold — accent only */
+
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  /* Soft, warm, dignified palette */
+  --radius: 0.75rem; /* soft-rounded — not sharp, not pill */
+
+  --warm-white: #FDFCFB;
+  --cream: #9A87A8;        /* creamy muted purple */
+  --lavender: #F6F2F6;     /* pale lavender surface */
+  --plum: #5F4B6B;         /* deep plum-purple for headings */
+  --gold: #C6A669;         /* muted gold — accent for flame divider ONLY */
+
+  --background: #FDFCFB;
+  --foreground: #3B3340;   /* warm near-black for body */
+
+  --card: #F6F2F6;
+  --card-foreground: #3B3340;
+
+  --popover: #FDFCFB;
+  --popover-foreground: #3B3340;
+
+  --primary: #5F4B6B;      /* plum — primary brand */
+  --primary-foreground: #FDFCFB;
+
+  --secondary: #F6F2F6;
+  --secondary-foreground: #5F4B6B;
+
+  --muted: #EFE9EE;
+  --muted-foreground: #6E6379;
+
+  --accent: #9A87A8;       /* creamy muted purple accent */
+  --accent-foreground: #FDFCFB;
+
+  --destructive: #9B4A4A;  /* muted, dignified red */
+  --border: #E2D9E2;
+  --input: #E2D9E2;
+  --ring: #5F4B6B;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-karla), system-ui, sans-serif;
+    /* Creamy muted purple blended into warm white — the main background.
+       Subtle vertical gradient keeps it warm without being decorative. */
+    background-image: linear-gradient(
+      to bottom,
+      #F6F2F6 0%,
+      #FDFCFB 35%,
+      #FDFCFB 100%
+    );
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-fraunces), Georgia, serif;
+    color: var(--plum);
+    letter-spacing: -0.01em;
+  }
+  /* Visible focus states — accessibility requirement */
+  :focus-visible {
+    outline: 2px solid var(--plum);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+/* ============================================================
+   Eternal Light flame divider
+   A thin gold line with a small flame/light motif at center.
+   Used sparingly — at most 3 times per page.
+   ============================================================ */
+
+.eternal-light {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 3rem auto;
+  max-width: 28rem;
+  color: var(--gold);
+}
+
+.eternal-light::before,
+.eternal-light::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--gold) 50%,
+    transparent 100%
+  );
+}
+
+.eternal-light::before {
+  background: linear-gradient(
+    to left,
+    var(--gold) 0%,
+    transparent 100%
+  );
+}
+
+.eternal-light__flame {
+  flex-shrink: 0;
+  width: 14px;
+  height: 22px;
+  /* Flame shape — a small teardrop rendered in muted gold */
+  background: var(--gold);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 22'><path d='M7 0c2 3 5 6 5 11a5 5 0 0 1-10 0c0-2 1-4 2-5 .3 1 .8 1.5 1.5 1.5C7 8 6 5 7 0z'/></svg>") center / contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 22'><path d='M7 0c2 3 5 6 5 11a5 5 0 0 1-10 0c0-2 1-4 2-5 .3 1 .8 1.5 1.5 1.5C7 8 6 5 7 0z'/></svg>") center / contain no-repeat;
+  opacity: 0.85;
+}
+
+/* Pull-quote for 1 Corinthians 15:55 */
+.pull-quote {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  color: var(--plum);
+  font-size: 1.5rem;
+  line-height: 1.55;
+  text-align: center;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+  padding: 2rem 1rem;
+  margin: 3rem auto;
+  max-width: 36rem;
+}
+
+@media (min-width: 768px) {
+  .pull-quote {
+    font-size: 1.875rem;
+    padding: 3rem 2rem;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Long-form prose styling for biography */
+.prose-memorial {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  max-width: 42rem;
+  margin: 0 auto;
+}
+.prose-memorial p {
+  margin-bottom: 1.5rem;
+}
+.prose-memorial p:first-of-type {
+  font-size: 1.125rem;
+  color: var(--plum);
+}
