@@ -48,6 +48,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${fraunces.variable} ${karla.variable} antialiased`}
+        suppressHydrationWarning
       >
         <SessionProvider>{children}</SessionProvider>
         <Toaster />
