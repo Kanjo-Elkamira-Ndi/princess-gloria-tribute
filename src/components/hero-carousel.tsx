@@ -109,7 +109,7 @@ export function HeroCarousel() {
 
       {/* Centered text content — overlays the slides */}
       <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center px-5 text-center">
-        <p className="font-serif italic text-sm sm:text-base text-warm-white/90 tracking-[0.2em] uppercase hero-ken-burns-none">
+        <p className="font-serif italic text-sm sm:text-base text-warm-white/90 tracking-[0.2em] uppercase hero-fade-up">
           In Loving Memory of
         </p>
 
@@ -122,7 +122,7 @@ export function HeroCarousel() {
           22 October 1965 &nbsp;—&nbsp; 24 June 2026
         </p>
 
-        <div className="mt-8 max-w-xl hero-fade-up-delay-2">
+        <div className="mt-6 max-w-xl hero-fade-up-delay-2">
           <p className="font-serif italic text-lg sm:text-2xl text-warm-white leading-snug drop-shadow-[0_1px_12px_rgba(59,51,64,0.6)]">
             {SLIDES[selected].caption}
           </p>
@@ -132,7 +132,7 @@ export function HeroCarousel() {
         </div>
 
         {/* Carousel dot indicators */}
-        <div className="pointer-events-auto mt-8 flex items-center gap-2.5">
+        <div className="pointer-events-auto mt-6 flex items-center gap-2.5">
           {SLIDES.map((slide, i) => (
             <button
               key={slide.src}
@@ -150,25 +150,25 @@ export function HeroCarousel() {
           ))}
         </div>
 
-        <div className="hidden sm:block mt-8 hero-fade-up-delay-3">
-          <EternalLightDivider className="!mt-4 !max-w-xs [&_.eternal-light__flame]:opacity-100 [&::before]:bg-gradient-to-l [&::before]:from-gold/80 [&::before]:to-transparent [&::after]:bg-gradient-to-r [&::after]:from-gold/80 [&::after]:to-transparent" />
+        <div className="hidden sm:block mt-5 hero-fade-up-delay-3">
+          <EternalLightDivider className="!my-0 !max-w-xs [&_.eternal-light__flame]:opacity-100 [&::before]:bg-gradient-to-l [&::before]:from-gold/80 [&::before]:to-transparent [&::after]:bg-gradient-to-r [&::after]:from-gold/80 [&::after]:to-transparent" />
         </div>
 
         {/* Calls to action */}
-        <div className="pointer-events-auto mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center">
+        {/* <div className="pointer-events-auto mt-5 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center hero-fade-up-delay-4">
           <Link
             href="/biography"
-            className="inline-flex items-center justify-center px-7 py-3.5 rounded-lg bg-warm-white text-plum font-sans text-sm sm:text-base font-medium hover:bg-warm-white/90 transition-all hover:shadow-xl hover:shadow-plum/20 min-h-[44px] hero-fade-up-delay-4"
+            className="inline-flex items-center justify-center px-7 py-3.5 rounded-lg bg-warm-white text-plum font-sans text-sm sm:text-base font-medium hover:bg-warm-white/90 transition-all hover:shadow-xl hover:shadow-plum/20 min-h-[44px]"
           >
             Read her story
           </Link>
           <Link
             href="/tributes/new"
-            className="inline-flex items-center justify-center px-7 py-3.5 rounded-lg border border-warm-white/70 text-warm-white font-sans text-sm sm:text-base backdrop-blur-sm bg-plum/20 hover:bg-plum/40 transition-all hover:shadow-xl hover:shadow-plum/30 min-h-[44px] hero-fade-up-delay-4"
+            className="inline-flex items-center justify-center px-7 py-3.5 rounded-lg border border-warm-white/70 text-warm-white font-sans text-sm sm:text-base backdrop-blur-sm bg-plum/20 hover:bg-plum/40 transition-all hover:shadow-xl hover:shadow-plum/30 min-h-[44px]"
           >
             Leave a tribute
           </Link>
-        </div>
+        </div> */}
       </div>
     </section>
   );
