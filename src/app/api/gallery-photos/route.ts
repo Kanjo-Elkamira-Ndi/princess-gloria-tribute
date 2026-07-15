@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPendingGalleryPhoto, getApprovedGalleryPhotos } from "@/lib/gallery-photos";
 import { rateLimit } from "@/lib/rate-limit";
-import { saveUpload, UploadError } from "@/lib/storage";
+import { uploadToCloudinary, CloudinaryUploadError } from "@/lib/cloudinary";
 
 /**
  * Public gallery photo endpoint.
  *
- * POST — submit a photo for admin review.
+ * POST — submit a photo for admin review (uploaded to Cloudinary).
  * GET  — list approved photos.
  *
- * Same security model as tributes: honeypot, rate limit, server validation,
- * re-encoded through sharp.
+ * Security: honeypot, rate limit, server validation.
  */
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -111,11 +110,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (photoFile.size > MAX_PHOTO_BYTES) {
+    return NextResponse.json(
+      { error: "Photo must be 5 MB or smaller." },
+      { status: 400 }
+    );
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(photoFile.type)) {
+    return NextResponse.json(
+      { error: "Photo must be in JPEG, PNG, or WebP format." },
+      { status: 400 }
+    );
+  }
+
   let photoUrl: string;
   try {
-    photoUrl = await saveUpload(photoFile);
+    photoUrl = await uploadToCloudinary(photoFile);
   } catch (err) {
-    if (err instanceof UploadError) {
+    if (err instanceof CloudinaryUploadError) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
     return NextResponse.json(

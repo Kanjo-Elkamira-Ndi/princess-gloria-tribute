@@ -1,4 +1,5 @@
 import { requireAdmin, getPendingTributes, getApprovedTributesAdmin, getAdminStats } from "@/lib/admin-tributes";
+import { getPendingGalleryPhotos, getApprovedGalleryPhotosAdmin, getGalleryPhotoStats } from "@/lib/admin-gallery-photos";
 import { PageShell, EternalLightDivider } from "@/components/site-shell";
 import { AdminDashboardClient, SignOutButton } from "@/components/admin-dashboard-client";
 import { format } from "date-fns";
@@ -11,13 +12,15 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const session = await requireAdmin();
-  const [pending, approved, stats] = await Promise.all([
+  const [pending, approved, stats, pendingPhotos, approvedPhotos, photoStats] = await Promise.all([
     getPendingTributes(),
     getApprovedTributesAdmin(),
     getAdminStats(),
+    getPendingGalleryPhotos(),
+    getApprovedGalleryPhotosAdmin(),
+    getGalleryPhotoStats(),
   ]);
 
-  // Format dates for the client — server-side to avoid timezone drift
   const formatted = {
     pending: pending.map((t) => ({
       ...t,
@@ -32,6 +35,20 @@ export default async function AdminDashboardPage() {
     })),
   };
 
+  const formattedPhotos = {
+    pending: pendingPhotos.map((p) => ({
+      ...p,
+      createdAtFormatted: format(new Date(p.createdAt), "d MMM yyyy, h:mm a"),
+    })),
+    approved: approvedPhotos.map((p) => ({
+      ...p,
+      createdAtFormatted: format(new Date(p.createdAt), "d MMM yyyy"),
+      reviewedAtFormatted: p.reviewedAt
+        ? format(new Date(p.reviewedAt), "d MMM yyyy")
+        : "",
+    })),
+  };
+
   return (
     <PageShell>
       <section className="px-5 sm:px-8 py-10 sm:py-14">
@@ -42,7 +59,7 @@ export default async function AdminDashboardPage() {
                 Family Moderator
               </p>
               <h1 className="mt-1 font-serif text-2xl sm:text-3xl text-plum">
-                Tribute review
+                Review dashboard
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 Signed in as {session.user.email}
@@ -53,16 +70,31 @@ export default async function AdminDashboardPage() {
 
           <EternalLightDivider />
 
-          {/* Stats */}
+          {/* Tribute Stats */}
+          <div className="mb-2">
+            <h2 className="font-serif text-lg text-plum mb-3">Tributes</h2>
+          </div>
           <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
             <Stat label="Pending" value={stats.pending} tone="pending" />
             <Stat label="Approved" value={stats.approved} tone="approved" />
             <Stat label="Rejected" value={stats.rejected} tone="rejected" />
           </div>
 
+          {/* Gallery Photo Stats */}
+          <div className="mb-2">
+            <h2 className="font-serif text-lg text-plum mb-3">Gallery Photos</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
+            <Stat label="Pending" value={photoStats.pending} tone="pending" />
+            <Stat label="Approved" value={photoStats.approved} tone="approved" />
+            <Stat label="Rejected" value={photoStats.rejected} tone="rejected" />
+          </div>
+
           <AdminDashboardClient
             pending={formatted.pending}
             approved={formatted.approved}
+            galleryPending={formattedPhotos.pending}
+            galleryApproved={formattedPhotos.approved}
           />
         </div>
       </section>

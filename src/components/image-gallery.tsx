@@ -134,6 +134,7 @@ export function ImageGallery({
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 loading={index < 3 ? "eager" : "lazy"}
+                unoptimized
               />
               <div className="absolute inset-0 bg-gradient-to-t from-plum/90 via-plum/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               {image.caption && (
@@ -210,6 +211,7 @@ export function ImageGallery({
               height={1500}
               className="object-contain w-full h-full max-h-[85vh]"
               priority
+              unoptimized
             />
           </div>
 

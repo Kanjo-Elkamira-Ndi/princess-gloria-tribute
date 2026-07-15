@@ -4,7 +4,7 @@ import {
   approveGalleryPhoto,
   rejectGalleryPhoto,
 } from "@/lib/admin-gallery-photos";
-import { deleteUpload } from "@/lib/storage";
+import { deleteFromCloudinary } from "@/lib/cloudinary";
 import { sql } from "@/lib/db";
 
 /**
@@ -63,10 +63,10 @@ export async function PATCH(
     return NextResponse.json({ ok: true, status: "approved" });
   }
 
-  // Reject — also delete the uploaded photo
+  // Reject — also delete the uploaded photo from Cloudinary
   await rejectGalleryPhoto(id, session.user.id);
   try {
-    await deleteUpload(existing.photo_url);
+    await deleteFromCloudinary(existing.photo_url);
   } catch {
     // best-effort
   }
