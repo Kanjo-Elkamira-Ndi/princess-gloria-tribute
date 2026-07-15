@@ -10,6 +10,9 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import postgres from "postgres";
 import bcrypt from "bcryptjs";
+import { loadEnv } from "./load-env";
+
+loadEnv();
 
 const ROOT = resolve(__dirname, "..");
 

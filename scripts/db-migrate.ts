@@ -10,6 +10,9 @@
 import { readFileSync, readdirSync } from "fs";
 import { resolve } from "path";
 import postgres from "postgres";
+import { loadEnv } from "./load-env";
+
+loadEnv();
 
 const ROOT = resolve(__dirname, "..");
 
