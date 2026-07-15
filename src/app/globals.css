@@ -201,6 +201,42 @@
   }
 }
 
+/* ============================================================
+   Hero carousel — entrance animations
+   Staggered fade-up for a gentle, dignified reveal.
+   ============================================================ */
+
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-fade-up {
+  animation: hero-fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-fade-up-delay-1 {
+  animation: hero-fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.15s;
+}
+.hero-fade-up-delay-2 {
+  animation: hero-fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.3s;
+}
+.hero-fade-up-delay-3 {
+  animation: hero-fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.45s;
+}
+.hero-fade-up-delay-4 {
+  animation: hero-fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.6s;
+}
+
 /* Long-form prose styling for biography */
 .prose-memorial {
   color: var(--foreground);
