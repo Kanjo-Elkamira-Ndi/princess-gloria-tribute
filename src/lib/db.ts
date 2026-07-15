@@ -10,6 +10,7 @@ export const sql =
     max: 10,
     idle_timeout: 20,
     connect_timeout: 10,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
   });
 
 if (process.env.NODE_ENV !== "production") globalForSql.sql = sql;

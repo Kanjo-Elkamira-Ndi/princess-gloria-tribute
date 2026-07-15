@@ -7,8 +7,9 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   images: {
-    // Local uploads are served from /uploads/. Remote URLs aren't used.
-    remotePatterns: [],
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+    ],
   },
 };
 
