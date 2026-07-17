@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS tribute (
   relationship  TEXT NOT NULL,
   message       TEXT NOT NULL,
   email         TEXT,
+  phone         TEXT,
   photos        TEXT NOT NULL DEFAULT '[]',
   status        TEXT NOT NULL DEFAULT 'pending',
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),

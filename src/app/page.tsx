@@ -48,9 +48,7 @@ export default async function LandingPage() {
             Family, friends, and well-wishers have shared{" "}
             <span className="font-medium text-plum">{tributeCount}</span>{" "}
             {tributeCount === 1 ? "tribute" : "tributes"} in honour of Princess
-            Gloria. Each one is reviewed by a family moderator before it
-            appears here, so that this space remains gentle and true to her
-            memory.
+            Gloria — a gentle space kept true to her memory.
           </p>
           <div className="mt-8">
             <Link
@@ -75,8 +73,7 @@ export default async function LandingPage() {
           </h2>
           <p className="mt-4 text-foreground/75 leading-relaxed">
             If you knew Princess Gloria — as family, friend, colleague, or
-            neighbour — we would be honoured to receive your words. A family
-            moderator will review each tribute before it appears on the wall.
+            neighbour — we would be honoured to receive your words.
           </p>
         </div>
         <div className="mx-auto max-w-2xl mt-8">

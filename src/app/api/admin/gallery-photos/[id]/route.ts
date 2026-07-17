@@ -3,6 +3,8 @@ import { getAdminSession } from "@/lib/admin-tributes";
 import {
   approveGalleryPhoto,
   rejectGalleryPhoto,
+  removeGalleryPhoto,
+  restoreGalleryPhoto,
 } from "@/lib/admin-gallery-photos";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
 import { sql } from "@/lib/db";
@@ -10,9 +12,15 @@ import { sql } from "@/lib/db";
 /**
  * PATCH /api/admin/gallery-photos/[id]
  *
- * Body: { action: "approve" | "reject" }
+ * Body: { action: "approve" | "reject" | "remove" | "restore" }
  *
  * Auth: requires admin session.
+ *
+ * Allowed transitions:
+ *   - approve : pending  -> approved
+ *   - reject  : pending  -> rejected  (file deleted from Cloudinary)
+ *   - remove  : approved -> removed   (hidden from gallery, file KEPT)
+ *   - restore : removed  -> approved
  */
 export async function PATCH(
   req: Request,
@@ -36,9 +44,14 @@ export async function PATCH(
   }
 
   const action = body.action;
-  if (action !== "approve" && action !== "reject") {
+  if (
+    action !== "approve" &&
+    action !== "reject" &&
+    action !== "remove" &&
+    action !== "restore"
+  ) {
     return NextResponse.json(
-      { error: "Action must be 'approve' or 'reject'." },
+      { error: "Action must be 'approve', 'reject', 'remove', or 'restore'." },
       { status: 400 }
     );
   }
@@ -51,15 +64,33 @@ export async function PATCH(
   if (!existing) {
     return NextResponse.json({ error: "Photo not found" }, { status: 404 });
   }
-  if (existing.status !== "pending") {
+
+  const required: Record<string, string> = {
+    approve: "pending",
+    reject: "pending",
+    remove: "approved",
+    restore: "removed",
+  };
+  if (existing.status !== required[action]) {
     return NextResponse.json(
-      { error: `This photo has already been ${existing.status}.` },
+      { error: `This photo is ${existing.status} and cannot be ${action}d.` },
       { status: 409 }
     );
   }
 
   if (action === "approve") {
     await approveGalleryPhoto(id, session.user.id);
+    return NextResponse.json({ ok: true, status: "approved" });
+  }
+
+  if (action === "remove") {
+    // Hide from the public gallery but KEEP the file so it can be restored.
+    await removeGalleryPhoto(id, session.user.id);
+    return NextResponse.json({ ok: true, status: "removed" });
+  }
+
+  if (action === "restore") {
+    await restoreGalleryPhoto(id, session.user.id);
     return NextResponse.json({ ok: true, status: "approved" });
   }
 

@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPendingGalleryPhoto, getApprovedGalleryPhotos } from "@/lib/gallery-photos";
+import { createPendingGalleryPhotos, getApprovedGalleryPhotos } from "@/lib/gallery-photos";
 import { rateLimit } from "@/lib/rate-limit";
 import { uploadToCloudinary, CloudinaryUploadError } from "@/lib/cloudinary";
 
 /**
  * Public gallery photo endpoint.
  *
- * POST — submit a photo for admin review (uploaded to Cloudinary).
+ * POST — submit one or more photos for admin review (uploaded to Cloudinary).
+ *        Each photo becomes its own pending row, reviewed independently.
  * GET  — list approved photos.
  *
  * Security: honeypot, rate limit, server validation.
  */
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_PHOTOS = 10;
 const MAX_NAME = 120;
 const MAX_EMAIL = 254;
 const MAX_CAPTION = 300;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 /**
  * GET — list APPROVED gallery photos only.
@@ -61,7 +64,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         ok: true,
-        message: "Thank you. Your photo has been received and is pending review.",
+        message: "Thank you for remembering Princess Gloria with such love.",
       },
       { status: 200 }
     );
@@ -87,7 +90,7 @@ export async function POST(req: NextRequest) {
   }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json(
-      { error: "That email address doesn\u2019t look quite right." },
+      { error: "That email address doesn’t look quite right." },
       { status: 400 }
     );
   }
@@ -98,59 +101,68 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Photo — exactly 1
-  const photoFile = form
+  // Photos — one or more
+  const photoFiles = form
     .getAll("photo")
-    .find((f): f is File => f instanceof File && f.size > 0);
+    .filter((f): f is File => f instanceof File && f.size > 0);
 
-  if (!photoFile) {
+  if (photoFiles.length === 0) {
     return NextResponse.json(
-      { error: "Please select a photo to share." },
+      { error: "Please select at least one photo to share." },
       { status: 400 }
     );
   }
 
-  if (photoFile.size > MAX_PHOTO_BYTES) {
+  if (photoFiles.length > MAX_PHOTOS) {
     return NextResponse.json(
-      { error: "Photo must be 5 MB or smaller." },
+      { error: `Please choose up to ${MAX_PHOTOS} photos.` },
       { status: 400 }
     );
   }
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(photoFile.type)) {
-    return NextResponse.json(
-      { error: "Photo must be in JPEG, PNG, or WebP format." },
-      { status: 400 }
-    );
-  }
-
-  let photoUrl: string;
-  try {
-    photoUrl = await uploadToCloudinary(photoFile);
-  } catch (err) {
-    if (err instanceof CloudinaryUploadError) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
+  for (const file of photoFiles) {
+    if (file.size > MAX_PHOTO_BYTES) {
+      return NextResponse.json(
+        { error: "Each photo must be 5 MB or smaller." },
+        { status: 400 }
+      );
     }
-    return NextResponse.json(
-      { error: "Your photo could not be saved. Please try again." },
-      { status: 500 }
-    );
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Photos must be in JPEG, PNG, or WebP format." },
+        { status: 400 }
+      );
+    }
+  }
+
+  const photoUrls: string[] = [];
+  for (const file of photoFiles) {
+    try {
+      photoUrls.push(await uploadToCloudinary(file));
+    } catch (err) {
+      if (err instanceof CloudinaryUploadError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      return NextResponse.json(
+        { error: "One of your photos could not be saved. Please try again." },
+        { status: 500 }
+      );
+    }
   }
 
   try {
-    await createPendingGalleryPhoto({
+    await createPendingGalleryPhotos({
       name,
       email: email || undefined,
-      photoUrl,
+      photoUrls,
       caption: caption || undefined,
       company,
     });
   } catch (err) {
-    console.error("[gallery-photos] failed to insert pending photo", err);
+    console.error("[gallery-photos] failed to insert pending photos", err);
     return NextResponse.json(
       {
-        error: "We couldn\u2019t save your photo just now. Please try again in a moment.",
+        error: "We couldn’t save your photos just now. Please try again in a moment.",
       },
       { status: 500 }
     );
@@ -159,7 +171,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(
     {
       ok: true,
-      message: "Thank you. Your photo has been received and is pending review.",
+      message: "Thank you for remembering Princess Gloria with such love.",
     },
     { status: 201 }
   );

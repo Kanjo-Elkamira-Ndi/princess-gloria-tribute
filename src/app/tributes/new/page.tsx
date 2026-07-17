@@ -4,13 +4,9 @@ import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageShell, EternalLightDivider } from "@/components/site-shell";
-import { Loader2, ImagePlus, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-const MAX_PHOTOS = 3;
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const MAX_MESSAGE = 4000;
-
-type Preview = { file: File; url: string };
 
 export default function SubmitTributePage() {
   const router = useRouter();
@@ -20,49 +16,11 @@ export default function SubmitTributePage() {
   const [relationship, setRelationship] = useState("");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
-  const [previews, setPreviews] = useState<Preview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const companyRef = useRef<HTMLInputElement>(null);
-
-  function onPickPhotos(files: FileList | null) {
-    if (!files) return;
-    setError(null);
-    const incoming = Array.from(files).filter(
-      (f) => f.type === "image/jpeg" || f.type === "image/png" || f.type === "image/webp"
-    );
-    if (incoming.length !== Array.from(files).length) {
-      setError("Photos must be in JPEG, PNG, or WebP format.");
-    }
-    const tooBig = incoming.find((f) => f.size > MAX_PHOTO_BYTES);
-    if (tooBig) {
-      setError("Each photo must be 5 MB or smaller.");
-      return;
-    }
-    const room = MAX_PHOTOS - previews.length;
-    const accepted = incoming.slice(0, room);
-    if (incoming.length > room) {
-      setError(`You can add up to ${MAX_PHOTOS} photos in total.`);
-    }
-    const newPreviews = accepted.map((file) => ({
-      file,
-      url: URL.createObjectURL(file),
-    }));
-    setPreviews((prev) => [...prev, ...newPreviews]);
-    // Reset input so the same file can be re-picked if removed
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
-  function removePhoto(idx: number) {
-    setPreviews((prev) => {
-      const next = [...prev];
-      const [removed] = next.splice(idx, 1);
-      if (removed) URL.revokeObjectURL(removed.url);
-      return next;
-    });
-  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -93,9 +51,9 @@ export default function SubmitTributePage() {
     fd.set("relationship", relationship.trim());
     fd.set("message", message.trim());
     if (email.trim()) fd.set("email", email.trim());
+    if (phone.trim()) fd.set("phone", phone.trim());
     const companyVal = companyRef.current?.value?.trim() ?? "";
     if (companyVal) fd.set("company", companyVal);
-    for (const p of previews) fd.append("photos", p.file);
 
     startTransition(async () => {
       try {
@@ -107,9 +65,6 @@ export default function SubmitTributePage() {
           return;
         }
 
-        // Cleanup previews
-        for (const p of previews) URL.revokeObjectURL(p.url);
-        setPreviews([]);
         setSuccess(true);
         // Scroll to top so the confirmation is visible
         if (typeof window !== "undefined") {
@@ -134,8 +89,7 @@ export default function SubmitTributePage() {
             </h1>
             <p className="mt-4 text-foreground/75 leading-relaxed">
               If you knew Princess Gloria — as family, friend, colleague, or
-              neighbour — we would be honoured to receive your words. A family
-              moderator will read each tribute before it appears on the wall.
+              neighbour — we would be honoured to receive your words.
             </p>
           </header>
 
@@ -152,12 +106,8 @@ export default function SubmitTributePage() {
                   Thank you.
                 </p>
                 <p className="mt-3 text-foreground/80 leading-relaxed">
-                  Your tribute has been received and is pending review. Once a
-                  family moderator has read it, it will appear on the tributes
-                  wall.
-                </p>
-                <p className="mt-4 text-sm text-muted-foreground">
-                  Your kindness is a comfort to us.
+                  Your words are a precious gift, and a true comfort to us.
+                  Thank you for remembering Princess Gloria with such love.
                 </p>
               </div>
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -175,6 +125,7 @@ export default function SubmitTributePage() {
                     setRelationship("");
                     setMessage("");
                     setEmail("");
+                    setPhone("");
                   }}
                   className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-muted-foreground font-sans text-sm sm:text-base hover:text-plum transition-colors min-h-[44px]"
                 >
@@ -257,57 +208,6 @@ export default function SubmitTributePage() {
               </Field>
 
               <Field
-                id="photos"
-                label="Photos (optional)"
-                hint={`Up to ${MAX_PHOTOS} photos, JPEG / PNG / WebP, 5 MB each.`}
-              >
-                <div className="flex flex-wrap gap-3">
-                  {previews.map((p, idx) => (
-                    <div
-                      key={p.url}
-                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-border bg-lavender/50"
-                    >
-                      <img
-                        src={p.url}
-                        alt={`Selected photo ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(idx)}
-                        aria-label={`Remove photo ${idx + 1}`}
-                        className="absolute top-1 right-1 rounded-full bg-plum/80 hover:bg-plum text-warm-white p-1 transition-colors"
-                      >
-                        <X className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
-                  ))}
-
-                  {previews.length < MAX_PHOTOS && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-24 h-24 rounded-lg border border-dashed border-border bg-lavender/30 hover:bg-lavender/60 transition-colors flex flex-col items-center justify-center text-muted-foreground hover:text-plum"
-                      aria-label="Add a photo"
-                    >
-                      <ImagePlus className="w-5 h-5" aria-hidden="true" />
-                      <span className="text-[10px] mt-1">Add photo</span>
-                    </button>
-                  )}
-
-                  <input
-                    ref={fileInputRef}
-                    id="photos"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    onChange={(e) => onPickPhotos(e.target.files)}
-                    className="sr-only"
-                  />
-                </div>
-              </Field>
-
-              <Field
                 id="email"
                 label="Email (optional, private)"
                 hint="Only seen by family moderators. We will never publish your email or share it."
@@ -321,6 +221,23 @@ export default function SubmitTributePage() {
                   autoComplete="email"
                   className="w-full rounded-lg border border-input bg-warm-white px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-plum focus:border-plum min-h-[44px]"
                   placeholder="you@example.com"
+                />
+              </Field>
+
+              <Field
+                id="phone"
+                label="Phone (optional, private)"
+                hint="Only seen by family moderators. We will never publish your phone number or share it."
+              >
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  maxLength={40}
+                  autoComplete="tel"
+                  className="w-full rounded-lg border border-input bg-warm-white px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-plum focus:border-plum min-h-[44px]"
+                  placeholder="e.g. +237 6 12 34 56 78"
                 />
               </Field>
 

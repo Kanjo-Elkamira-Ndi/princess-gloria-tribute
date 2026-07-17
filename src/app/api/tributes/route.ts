@@ -23,6 +23,7 @@ const MAX_MESSAGE = 4000;
 const MAX_NAME = 120;
 const MAX_RELATIONSHIP = 120;
 const MAX_EMAIL = 254;
+const MAX_PHONE = 40;
 
 /**
  * GET — list APPROVED tributes only.
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
   const relationship = (form.get("relationship") as string | null)?.trim() ?? "";
   const message = (form.get("message") as string | null)?.trim() ?? "";
   const email = (form.get("email") as string | null)?.trim() ?? "";
+  const phone = (form.get("phone") as string | null)?.trim() ?? "";
   // Honeypot — must be empty for a real submission
   const company = (form.get("company") as string | null)?.trim() ?? "";
 
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
       {
         ok: true,
         message:
-          "Thank you. Your tribute has been received and is pending review.",
+          "Thank you for remembering Princess Gloria with such love.",
       },
       { status: 200 }
     );
@@ -133,6 +135,12 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+  if (phone && phone.length > MAX_PHONE) {
+    return NextResponse.json(
+      { error: "That phone number looks too long — please check it." },
+      { status: 400 }
+    );
+  }
 
   // Photos — up to 3
   const photoFiles = form
@@ -167,6 +175,7 @@ export async function POST(req: NextRequest) {
       relationship,
       message,
       email: email || undefined,
+      phone: phone || undefined,
       photos: photoUrls,
       company,
     });
@@ -185,7 +194,7 @@ export async function POST(req: NextRequest) {
     {
       ok: true,
       message:
-        "Thank you. Your tribute has been received and is pending review.",
+        "Thank you for remembering Princess Gloria with such love.",
     },
     { status: 201 }
   );

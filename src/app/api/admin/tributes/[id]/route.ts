@@ -3,6 +3,8 @@ import {
   getAdminSession,
   approveTribute,
   rejectTribute,
+  removeTribute,
+  restoreTribute,
 } from "@/lib/admin-tributes";
 import { deleteUpload } from "@/lib/storage";
 import { sql } from "@/lib/db";
@@ -10,14 +12,16 @@ import { sql } from "@/lib/db";
 /**
  * PATCH /api/admin/tributes/[id]
  *
- * Body: { action: "approve" | "reject" }
+ * Body: { action: "approve" | "reject" | "remove" | "restore" }
  *
  * Auth: requires admin session. The session user's ID is recorded as the
  * reviewer for audit purposes.
  *
- * On reject, the uploaded photos are also deleted from disk so we don't
- * keep unwanted images. The DB row is kept (status="rejected") for audit
- * but is never reachable through any public route or API.
+ * Allowed transitions:
+ *   - approve : pending  -> approved
+ *   - reject  : pending  -> rejected  (uploaded photos deleted from disk)
+ *   - remove  : approved -> removed   (hidden from site, photos KEPT)
+ *   - restore : removed  -> approved  (back on the public wall)
  */
 export async function PATCH(
   req: Request,
@@ -41,15 +45,18 @@ export async function PATCH(
   }
 
   const action = body.action;
-  if (action !== "approve" && action !== "reject") {
+  if (
+    action !== "approve" &&
+    action !== "reject" &&
+    action !== "remove" &&
+    action !== "restore"
+  ) {
     return NextResponse.json(
-      { error: "Action must be 'approve' or 'reject'." },
+      { error: "Action must be 'approve', 'reject', 'remove', or 'restore'." },
       { status: 400 }
     );
   }
 
-  // Verify the tribute exists and is currently pending — prevents
-  // re-approving already-approved items or un-rejecting rejected ones.
   const [existing] = await sql`
     SELECT id, status, photos
     FROM tribute
@@ -58,10 +65,19 @@ export async function PATCH(
   if (!existing) {
     return NextResponse.json({ error: "Tribute not found" }, { status: 404 });
   }
-  if (existing.status !== "pending") {
+
+  // Each action is only valid from a specific current status. This prevents
+  // double-processing and illegal transitions (e.g. removing a pending item).
+  const required: Record<string, string> = {
+    approve: "pending",
+    reject: "pending",
+    remove: "approved",
+    restore: "removed",
+  };
+  if (existing.status !== required[action]) {
     return NextResponse.json(
       {
-        error: `This tribute has already been ${existing.status}.`,
+        error: `This tribute is ${existing.status} and cannot be ${action}d.`,
       },
       { status: 409 }
     );
@@ -72,7 +88,18 @@ export async function PATCH(
     return NextResponse.json({ ok: true, status: "approved" });
   }
 
-  // Reject — also delete uploaded photos
+  if (action === "remove") {
+    // Hide from the public site but KEEP the photos so it can be restored.
+    await removeTribute(id, session.user.id);
+    return NextResponse.json({ ok: true, status: "removed" });
+  }
+
+  if (action === "restore") {
+    await restoreTribute(id, session.user.id);
+    return NextResponse.json({ ok: true, status: "approved" });
+  }
+
+  // Reject — also delete uploaded photos, since a rejected item is never restored.
   await rejectTribute(id, session.user.id);
   try {
     let photos: string[] = [];

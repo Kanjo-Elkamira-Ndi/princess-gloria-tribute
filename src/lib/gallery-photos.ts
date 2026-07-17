@@ -83,3 +83,30 @@ export async function createPendingGalleryPhoto(input: NewGalleryPhotoInput): Pr
     )
   `;
 }
+
+export type NewGalleryPhotoBatchInput = {
+  name: string;
+  email?: string;
+  photoUrls: string[];
+  caption?: string;
+  company?: string;
+};
+
+/**
+ * Create one pending gallery photo per uploaded file. A single submission with
+ * several photos becomes several independent rows sharing the same submitter
+ * details and caption, each reviewed on its own in the admin dashboard.
+ */
+export async function createPendingGalleryPhotos(
+  input: NewGalleryPhotoBatchInput
+): Promise<void> {
+  for (const photoUrl of input.photoUrls) {
+    await createPendingGalleryPhoto({
+      name: input.name,
+      email: input.email,
+      photoUrl,
+      caption: input.caption,
+      company: input.company,
+    });
+  }
+}

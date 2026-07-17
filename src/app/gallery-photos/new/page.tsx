@@ -6,6 +6,7 @@ import { PageShell, EternalLightDivider } from "@/components/site-shell";
 import { Loader2, ImagePlus, X } from "lucide-react";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_PHOTOS = 10;
 const MAX_CAPTION = 300;
 
 type Preview = { file: File; url: string };
@@ -17,36 +18,46 @@ export default function SubmitGalleryPhotoPage() {
   const [email, setEmail] = useState("");
   const [caption, setCaption] = useState("");
 
-  const [preview, setPreview] = useState<Preview | null>(null);
+  const [previews, setPreviews] = useState<Preview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const companyRef = useRef<HTMLInputElement>(null);
 
-  function onPickPhoto(files: FileList | null) {
+  function onPickPhotos(files: FileList | null) {
     if (!files || files.length === 0) return;
     setError(null);
-    const file = files[0];
-
-    if (file.type !== "image/jpeg" && file.type !== "image/png" && file.type !== "image/webp") {
-      setError("Photo must be in JPEG, PNG, or WebP format.");
+    const incoming = Array.from(files).filter(
+      (f) => f.type === "image/jpeg" || f.type === "image/png" || f.type === "image/webp"
+    );
+    if (incoming.length !== Array.from(files).length) {
+      setError("Photos must be in JPEG, PNG, or WebP format.");
+    }
+    const tooBig = incoming.find((f) => f.size > MAX_PHOTO_BYTES);
+    if (tooBig) {
+      setError("Each photo must be 5 MB or smaller.");
       return;
     }
-    if (file.size > MAX_PHOTO_BYTES) {
-      setError("Photo must be 5 MB or smaller.");
-      return;
+    const room = MAX_PHOTOS - previews.length;
+    const accepted = incoming.slice(0, room);
+    if (incoming.length > room) {
+      setError(`You can add up to ${MAX_PHOTOS} photos in total.`);
     }
-
-    if (preview) URL.revokeObjectURL(preview.url);
-    setPreview({ file, url: URL.createObjectURL(file) });
+    const newPreviews = accepted.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+    setPreviews((prev) => [...prev, ...newPreviews]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  function removePhoto() {
-    if (preview) {
-      URL.revokeObjectURL(preview.url);
-      setPreview(null);
-    }
+  function removePhoto(idx: number) {
+    setPreviews((prev) => {
+      const next = [...prev];
+      const [removed] = next.splice(idx, 1);
+      if (removed) URL.revokeObjectURL(removed.url);
+      return next;
+    });
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -57,8 +68,8 @@ export default function SubmitGalleryPhotoPage() {
       setError("Please add your name so we know who is sharing.");
       return;
     }
-    if (!preview) {
-      setError("Please select a photo to share.");
+    if (previews.length === 0) {
+      setError("Please select at least one photo to share.");
       return;
     }
     if (caption.length > MAX_CAPTION) {
@@ -72,7 +83,7 @@ export default function SubmitGalleryPhotoPage() {
     if (caption.trim()) fd.set("caption", caption.trim());
     const companyVal = companyRef.current?.value?.trim() ?? "";
     if (companyVal) fd.set("company", companyVal);
-    fd.append("photo", preview.file);
+    for (const p of previews) fd.append("photo", p.file);
 
     startTransition(async () => {
       try {
@@ -84,14 +95,14 @@ export default function SubmitGalleryPhotoPage() {
           return;
         }
 
-        if (preview) URL.revokeObjectURL(preview.url);
-        setPreview(null);
+        for (const p of previews) URL.revokeObjectURL(p.url);
+        setPreviews([]);
         setSuccess(true);
         if (typeof window !== "undefined") {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
       } catch {
-        setError("We couldn\u2019t reach the server. Please try again in a moment.");
+        setError("We couldn’t reach the server. Please try again in a moment.");
       }
     });
   }
@@ -108,9 +119,7 @@ export default function SubmitGalleryPhotoPage() {
               Submit a photo
             </h1>
             <p className="mt-4 text-foreground/75 leading-relaxed">
-              Share a cherished photo in memory of Princess Gloria Mala Galabe.
-              A family moderator will review each submission before it appears
-              in the gallery.
+              Share cherished photos in memory of Princess Gloria Mala Galabe.
             </p>
           </header>
 
@@ -123,12 +132,8 @@ export default function SubmitGalleryPhotoPage() {
                   Thank you.
                 </p>
                 <p className="mt-3 text-foreground/80 leading-relaxed">
-                  Your photo has been received and is pending review. Once a
-                  family moderator has approved it, it will appear in the
-                  gallery.
-                </p>
-                <p className="mt-4 text-sm text-muted-foreground">
-                  Your kindness is a comfort to us.
+                  What a gift to see her remembered through your eyes. Your
+                  love and kindness mean more to us than we can ever say.
                 </p>
               </div>
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -148,7 +153,7 @@ export default function SubmitGalleryPhotoPage() {
                   }}
                   className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-muted-foreground font-sans text-sm sm:text-base hover:text-plum transition-colors min-h-[44px]"
                 >
-                  Submit another photo
+                  Submit more photos
                 </button>
               </div>
             </div>
@@ -169,7 +174,7 @@ export default function SubmitGalleryPhotoPage() {
               </div>
 
               <Field id="name" label="Your name" required
-                hint="This will appear alongside your photo.">
+                hint="This will appear alongside your photos.">
                 <input id="name" type="text" value={name}
                   onChange={(e) => setName(e.target.value)} maxLength={120}
                   required autoComplete="name"
@@ -177,37 +182,43 @@ export default function SubmitGalleryPhotoPage() {
                   placeholder="e.g. Marceline Angafor" />
               </Field>
 
-              <Field id="photo" label="Photo" required
-                hint="JPEG, PNG, or WebP, 5 MB max.">
+              <Field id="photos" label="Photos" required
+                hint={`Up to ${MAX_PHOTOS} photos, JPEG / PNG / WebP, 5 MB each.`}>
                 <div className="flex flex-wrap gap-3">
-                  {preview && (
-                    <div className="relative w-40 h-40 rounded-lg overflow-hidden border border-border bg-lavender/50">
-                      <img src={preview.url} alt="Selected photo"
+                  {previews.map((p, idx) => (
+                    <div key={p.url}
+                      className="relative w-32 h-32 rounded-lg overflow-hidden border border-border bg-lavender/50">
+                      <img src={p.url} alt={`Selected photo ${idx + 1}`}
                         className="w-full h-full object-cover" />
-                      <button type="button" onClick={removePhoto}
-                        aria-label="Remove photo"
+                      <button type="button" onClick={() => removePhoto(idx)}
+                        aria-label={`Remove photo ${idx + 1}`}
                         className="absolute top-1 right-1 rounded-full bg-plum/80 hover:bg-plum text-warm-white p-1 transition-colors">
                         <X className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                     </div>
-                  )}
-                  {!preview && (
+                  ))}
+                  {previews.length < MAX_PHOTOS && (
                     <button type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-40 h-40 rounded-lg border border-dashed border-border bg-lavender/30 hover:bg-lavender/60 transition-colors flex flex-col items-center justify-center text-muted-foreground hover:text-plum"
-                      aria-label="Select a photo">
+                      className="w-32 h-32 rounded-lg border border-dashed border-border bg-lavender/30 hover:bg-lavender/60 transition-colors flex flex-col items-center justify-center text-muted-foreground hover:text-plum"
+                      aria-label="Add a photo">
                       <ImagePlus className="w-6 h-6" aria-hidden="true" />
-                      <span className="text-xs mt-2">Choose photo</span>
+                      <span className="text-xs mt-2">Add photo</span>
                     </button>
                   )}
-                  <input ref={fileInputRef} id="photo" type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(e) => onPickPhoto(e.target.files)} className="sr-only" />
+                  <input ref={fileInputRef} id="photos" type="file"
+                    accept="image/jpeg,image/png,image/webp" multiple
+                    onChange={(e) => onPickPhotos(e.target.files)} className="sr-only" />
                 </div>
+                {previews.length > 0 && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {previews.length} of {MAX_PHOTOS} selected
+                  </p>
+                )}
               </Field>
 
               <Field id="caption" label="Caption (optional)"
-                hint={`Up to ${MAX_CAPTION} characters. A short description of the photo.`}>
+                hint={`Up to ${MAX_CAPTION} characters. Applied to every photo in this submission.`}>
                 <input id="caption" type="text" value={caption}
                   onChange={(e) => setCaption(e.target.value)} maxLength={MAX_CAPTION}
                   className="w-full rounded-lg border border-input bg-warm-white px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-plum focus:border-plum min-h-[44px]"
@@ -241,7 +252,7 @@ export default function SubmitGalleryPhotoPage() {
                 <button type="submit" disabled={pending}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-plum text-warm-white font-sans text-sm sm:text-base hover:opacity-90 transition-opacity min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed">
                   {pending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
-                  {pending ? "Sending\u2026" : "Submit photo"}
+                  {pending ? "Sending…" : previews.length > 1 ? "Submit photos" : "Submit photo"}
                 </button>
               </div>
 

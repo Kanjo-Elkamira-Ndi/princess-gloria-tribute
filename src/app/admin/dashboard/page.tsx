@@ -1,5 +1,5 @@
-import { requireAdmin, getPendingTributes, getApprovedTributesAdmin, getAdminStats } from "@/lib/admin-tributes";
-import { getPendingGalleryPhotos, getApprovedGalleryPhotosAdmin, getGalleryPhotoStats } from "@/lib/admin-gallery-photos";
+import { requireAdmin, getPendingTributes, getApprovedTributesAdmin, getRemovedTributesAdmin, getAdminStats } from "@/lib/admin-tributes";
+import { getPendingGalleryPhotos, getApprovedGalleryPhotosAdmin, getRemovedGalleryPhotosAdmin, getGalleryPhotoStats } from "@/lib/admin-gallery-photos";
 import { PageShell, EternalLightDivider } from "@/components/site-shell";
 import { AdminDashboardClient, SignOutButton } from "@/components/admin-dashboard-client";
 import { format } from "date-fns";
@@ -12,41 +12,43 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const session = await requireAdmin();
-  const [pending, approved, stats, pendingPhotos, approvedPhotos, photoStats] = await Promise.all([
+  const [pending, approved, removed, stats, pendingPhotos, approvedPhotos, removedPhotos, photoStats] = await Promise.all([
     getPendingTributes(),
     getApprovedTributesAdmin(),
+    getRemovedTributesAdmin(),
     getAdminStats(),
     getPendingGalleryPhotos(),
     getApprovedGalleryPhotosAdmin(),
+    getRemovedGalleryPhotosAdmin(),
     getGalleryPhotoStats(),
   ]);
 
+  const fmtTribute = (t: (typeof pending)[number]) => ({
+    ...t,
+    createdAtFormatted: format(new Date(t.createdAt), "d MMM yyyy, h:mm a"),
+    reviewedAtFormatted: t.reviewedAt
+      ? format(new Date(t.reviewedAt), "d MMM yyyy")
+      : "",
+  });
+
+  const fmtPhoto = (p: (typeof pendingPhotos)[number]) => ({
+    ...p,
+    createdAtFormatted: format(new Date(p.createdAt), "d MMM yyyy, h:mm a"),
+    reviewedAtFormatted: p.reviewedAt
+      ? format(new Date(p.reviewedAt), "d MMM yyyy")
+      : "",
+  });
+
   const formatted = {
-    pending: pending.map((t) => ({
-      ...t,
-      createdAtFormatted: format(new Date(t.createdAt), "d MMM yyyy, h:mm a"),
-    })),
-    approved: approved.map((t) => ({
-      ...t,
-      createdAtFormatted: format(new Date(t.createdAt), "d MMM yyyy"),
-      reviewedAtFormatted: t.reviewedAt
-        ? format(new Date(t.reviewedAt), "d MMM yyyy")
-        : "",
-    })),
+    pending: pending.map(fmtTribute),
+    approved: approved.map(fmtTribute),
+    removed: removed.map(fmtTribute),
   };
 
   const formattedPhotos = {
-    pending: pendingPhotos.map((p) => ({
-      ...p,
-      createdAtFormatted: format(new Date(p.createdAt), "d MMM yyyy, h:mm a"),
-    })),
-    approved: approvedPhotos.map((p) => ({
-      ...p,
-      createdAtFormatted: format(new Date(p.createdAt), "d MMM yyyy"),
-      reviewedAtFormatted: p.reviewedAt
-        ? format(new Date(p.reviewedAt), "d MMM yyyy")
-        : "",
-    })),
+    pending: pendingPhotos.map(fmtPhoto),
+    approved: approvedPhotos.map(fmtPhoto),
+    removed: removedPhotos.map(fmtPhoto),
   };
 
   return (
@@ -74,27 +76,31 @@ export default async function AdminDashboardPage() {
           <div className="mb-2">
             <h2 className="font-serif text-lg text-plum mb-3">Tributes</h2>
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10">
             <Stat label="Pending" value={stats.pending} tone="pending" />
             <Stat label="Approved" value={stats.approved} tone="approved" />
-            <Stat label="Rejected" value={stats.rejected} tone="rejected" />
+            <Stat label="Removed" value={stats.removed} tone="rejected" />
+            <Stat label="Declined" value={stats.rejected} tone="rejected" />
           </div>
 
           {/* Gallery Photo Stats */}
           <div className="mb-2">
             <h2 className="font-serif text-lg text-plum mb-3">Gallery Photos</h2>
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10">
             <Stat label="Pending" value={photoStats.pending} tone="pending" />
             <Stat label="Approved" value={photoStats.approved} tone="approved" />
-            <Stat label="Rejected" value={photoStats.rejected} tone="rejected" />
+            <Stat label="Removed" value={photoStats.removed} tone="rejected" />
+            <Stat label="Declined" value={photoStats.rejected} tone="rejected" />
           </div>
 
           <AdminDashboardClient
             pending={formatted.pending}
             approved={formatted.approved}
+            removed={formatted.removed}
             galleryPending={formattedPhotos.pending}
             galleryApproved={formattedPhotos.approved}
+            galleryRemoved={formattedPhotos.removed}
           />
         </div>
       </section>

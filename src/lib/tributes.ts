@@ -75,6 +75,7 @@ export type NewTributeInput = {
   relationship: string;
   message: string;
   email?: string;
+  phone?: string;
   photos: string[];
   company?: string; // honeypot — silently dropped if filled
 };
@@ -85,13 +86,14 @@ export type NewTributeInput = {
  */
 export async function createPendingTribute(input: NewTributeInput): Promise<void> {
   await sql`
-    INSERT INTO tribute (id, name, relationship, message, email, photos, status, company)
+    INSERT INTO tribute (id, name, relationship, message, email, phone, photos, status, company)
     VALUES (
       gen_random_uuid()::text,
       ${input.name},
       ${input.relationship},
       ${input.message},
       ${input.email ?? null},
+      ${input.phone ?? null},
       ${JSON.stringify(input.photos)},
       'pending',
       ${input.company ?? null}

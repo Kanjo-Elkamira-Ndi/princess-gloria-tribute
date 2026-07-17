@@ -25,9 +25,8 @@ export default async function TributesWallPage() {
               In her honour
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-foreground/75 leading-relaxed">
-              These are the words shared by family, friends, and well-wishers.
-              Each tribute has been reviewed by a family moderator before
-              appearing here.
+              These are the words shared by family, friends, and well-wishers
+              in loving memory of Princess Gloria.
             </p>
           </header>
 

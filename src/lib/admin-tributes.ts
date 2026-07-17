@@ -18,6 +18,7 @@ export type AdminTribute = {
   relationship: string;
   message: string;
   email: string | null;
+  phone: string | null;
   photos: string[];
   status: string;
   createdAt: string;
@@ -30,6 +31,7 @@ function toAdmin(row: {
   relationship: string;
   message: string;
   email: string | null;
+  phone: string | null;
   photos: string;
   status: string;
   created_at: string;
@@ -48,6 +50,7 @@ function toAdmin(row: {
     relationship: row.relationship,
     message: row.message,
     email: row.email,
+    phone: row.phone,
     photos,
     status: row.status,
     createdAt: new Date(row.created_at).toISOString(),
@@ -79,7 +82,7 @@ export async function requireAdmin() {
  */
 export async function getPendingTributes(): Promise<AdminTribute[]> {
   const rows = await sql`
-    SELECT id, name, relationship, message, email, photos, status, created_at, reviewed_at
+    SELECT id, name, relationship, message, email, phone, photos, status, created_at, reviewed_at
     FROM tribute
     WHERE status = 'pending'
     ORDER BY created_at ASC
@@ -88,13 +91,27 @@ export async function getPendingTributes(): Promise<AdminTribute[]> {
 }
 
 /**
- * List ALL approved tributes (admin view — includes private email field).
+ * List ALL approved tributes (admin view — includes private email/phone).
  */
 export async function getApprovedTributesAdmin(): Promise<AdminTribute[]> {
   const rows = await sql`
-    SELECT id, name, relationship, message, email, photos, status, created_at, reviewed_at
+    SELECT id, name, relationship, message, email, phone, photos, status, created_at, reviewed_at
     FROM tribute
     WHERE status = 'approved'
+    ORDER BY reviewed_at DESC NULLS LAST
+  `;
+  return rows.map(toAdmin);
+}
+
+/**
+ * List tributes the moderator has removed from the public site. The row and
+ * its photos are preserved so a removal can be undone via restoreTribute().
+ */
+export async function getRemovedTributesAdmin(): Promise<AdminTribute[]> {
+  const rows = await sql`
+    SELECT id, name, relationship, message, email, phone, photos, status, created_at, reviewed_at
+    FROM tribute
+    WHERE status = 'removed'
     ORDER BY reviewed_at DESC NULLS LAST
   `;
   return rows.map(toAdmin);
@@ -123,15 +140,40 @@ export async function rejectTribute(id: string, adminId: string): Promise<void> 
   `;
 }
 
+/**
+ * Remove a previously-approved tribute from the public site. Unlike reject,
+ * the photos are intentionally KEPT so the action is reversible via restore.
+ */
+export async function removeTribute(id: string, adminId: string): Promise<void> {
+  await sql`
+    UPDATE tribute
+    SET status = 'removed', reviewed_at = now(), reviewed_by = ${adminId}
+    WHERE id = ${id}
+  `;
+}
+
+/**
+ * Restore a removed tribute back to the public wall.
+ */
+export async function restoreTribute(id: string, adminId: string): Promise<void> {
+  await sql`
+    UPDATE tribute
+    SET status = 'approved', reviewed_at = now(), reviewed_by = ${adminId}
+    WHERE id = ${id}
+  `;
+}
+
 export async function getAdminStats() {
-  const [pending, approved, rejected] = await Promise.all([
+  const [pending, approved, rejected, removed] = await Promise.all([
     sql`SELECT COUNT(*)::int AS count FROM tribute WHERE status = 'pending'`,
     sql`SELECT COUNT(*)::int AS count FROM tribute WHERE status = 'approved'`,
     sql`SELECT COUNT(*)::int AS count FROM tribute WHERE status = 'rejected'`,
+    sql`SELECT COUNT(*)::int AS count FROM tribute WHERE status = 'removed'`,
   ]);
   return {
     pending: pending[0].count,
     approved: approved[0].count,
     rejected: rejected[0].count,
+    removed: removed[0].count,
   };
 }
